@@ -1,30 +1,7 @@
+  /* Dark only, like Skills Economy. No light theme and no switch: a second theme is a
+     second thing to build, a second thing to check, and a second way for two people to see
+     different pages. */
   :root {
-    color-scheme: light;
-    --paper: #FDFCF8;
-    --paper-sunk: #F5F2E9;
-    --ink: #1A1814;
-    --ink-soft: #4A453C;
-    --ink-muted: #6B6558;
-    --rule: #E2DCCD;
-    --accent: #7A3E2B;
-    --accent-soft: #F0E4DE;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      color-scheme: dark;
-      --paper: #16130F;
-      --paper-sunk: #1E1A15;
-      --ink: #F2EEE4;
-      --ink-soft: #CFC7B8;
-      --ink-muted: #9A9183;
-      --rule: #322C23;
-      --accent: #D98A6A;
-      --accent-soft: #2B1F19;
-    }
-  }
-
-  :root[data-theme="dark"] {
     color-scheme: dark;
     --paper: #16130F;
     --paper-sunk: #1E1A15;
@@ -33,7 +10,8 @@
     --ink-muted: #9A9183;
     --rule: #322C23;
     --accent: #D98A6A;
-    --accent-soft: #2B1F19;
+    --bad: #E8806B;
+    --good: #7FC79C;
   }
 
   body {
@@ -300,8 +278,8 @@ button.danger { background: transparent; color: var(--ink-soft); border: 1px sol
   background: var(--paper-sunk);
   font-size: 0.98rem;
 }
-.msg.bad { border-left-color: #A6382B; }
-.msg.good { border-left-color: #2F6B4F; }
+.msg.bad { border-left-color: var(--bad); }
+.msg.good { border-left-color: var(--good); }
 
 .status-line {
   margin-top: 1.6rem;

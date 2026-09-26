@@ -19,6 +19,16 @@ the frame on a desktop — so size in fixed units.
 Check a change by rendering at 390 pixels rather than assuming. Playwright with the
 preinstalled Chromium does it; the horizontal overflow figure should always be zero.
 
+## Dark only
+
+One theme. No light theme, no `prefers-color-scheme` branch, no switch. A second theme is a
+second thing to build, a second thing to check, and a second way for two people to look at
+the same page and see different things.
+
+Colours are tokens on `:root` and nothing is hard-coded in a rule. When rendering to check a
+change, set the browser to dark — headless Chromium defaults to light and will show you a
+page nobody sees.
+
 ## Never leave unused code
 
 A change that strands something removes it in the same change: a column, an export, a CSS
