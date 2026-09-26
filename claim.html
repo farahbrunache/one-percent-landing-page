@@ -22,8 +22,11 @@
 
   <footer class="stack gap-s">
     <p>
-      Bookmark this page. It is the only record of your order, and nothing about you was
-      recorded that could find it any other way.
+      Save this link. It is the only record of your order, and nothing about you was recorded
+      that could find it any other way.
+    </p>
+    <p class="actions" style="margin-top:0.3rem;">
+      <button type="button" class="quiet" id="copylink">Copy this page's link</button>
     </p>
     <p>
       Lost it? <a href="/buy">Enter your card code again</a> and you get a new link.
@@ -129,6 +132,17 @@
       lede(error.message);
     }
   }
+
+  const copy = document.getElementById('copylink');
+  copy.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(location.href);
+      copy.textContent = 'Copied';
+    } catch {
+      copy.textContent = 'Copy it from the address bar';
+    }
+    setTimeout(() => { copy.textContent = "Copy this page's link"; }, 2500);
+  });
 
   load();
 </script>

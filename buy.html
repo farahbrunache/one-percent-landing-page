@@ -126,18 +126,50 @@
     return data;
   }
 
+  function button(label, className, onClick) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = label;
+    if (className) b.className = className;
+    b.addEventListener('click', onClick);
+    return b;
+  }
+
   function showClaim(target, claim) {
-    const box = say(target, 'Your card is in. Keep this link — it is the only way back to your order.', 'good');
-    const link = document.createElement('p');
-    link.style.marginTop = '0.7rem';
+    const url = new URL(claim, location.origin).href;
+    const box = say(
+      target,
+      'Your card is in. Save this link before you go anywhere — it is the only way back to your '
+        + 'order, and nothing else was recorded about you that could find it.',
+      'good',
+    );
+
+    const line = document.createElement('p');
+    line.style.marginTop = '0.7rem';
     const a = document.createElement('a');
     a.href = claim;
-    a.textContent = new URL(claim, location.origin).href;
+    a.textContent = url;
     a.className = 'mono';
-    link.append(a);
-    box.append(link);
+    a.style.wordBreak = 'break-all';
+    line.append(a);
+    box.append(line);
+
+    const row = document.createElement('p');
+    row.className = 'actions';
+    const copy = button('Copy link', 'quiet', async () => {
+      try {
+        await navigator.clipboard.writeText(url);
+        copy.textContent = 'Copied';
+      } catch {
+        copy.textContent = 'Select the link above and copy it';
+      }
+      setTimeout(() => { copy.textContent = 'Copy link'; }, 2500);
+    });
+    row.append(copy, button('Open my order', null, () => { location.href = claim; }));
+    box.append(row);
+
+    // Kept as a convenience for this browser only. It is not the record — the link is.
     try { localStorage.setItem('onepercent.claim', claim); } catch {}
-    setTimeout(() => { location.href = claim; }, 2500);
   }
 
   document.getElementById('buy').addEventListener('submit', async (event) => {
