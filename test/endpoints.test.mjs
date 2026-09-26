@@ -137,12 +137,12 @@ check('rejects GET', r.statusCode === 405, r.payload);
 r = await run(call, 'POST', '/api/call', {});
 check('rejects a request with no claim token', r.statusCode === 400, r.payload);
 
-delete process.env.RETELL_API_KEY;
+delete process.env.RETELL_SECRET_KEY;
 delete process.env.RETELL_AGENT_ID;
 r = await run(call, 'POST', '/api/call', { t: 'something' });
 check('refuses when the voice service is not configured', r.statusCode === 503, r.payload);
 check('names what is missing and that the phone still works',
-  /RETELL_API_KEY/.test(r.payload?.error || '') && /phone/.test(r.payload?.error || ''), r.payload);
+  /RETELL_SECRET_KEY/.test(r.payload?.error || '') && /phone/.test(r.payload?.error || ''), r.payload);
 
 console.log('');
 if (failures) { console.log(failures + ' FAILED'); process.exit(1); }
