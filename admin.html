@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Card check — One Percent</title>
+<title>Payments — One Percent</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,10 +13,10 @@
 <body>
 <main class="wrap">
 
-  <h1>Card check</h1>
+  <h1>Payments</h1>
 
   <div id="signin">
-    <p class="lede">Sign in to see the cards waiting.</p>
+    <p class="lede">Sign in to see what is waiting.</p>
     <form class="fields" id="login" novalidate>
       <div class="field">
         <label for="secret">Admin secret</label>
@@ -93,7 +93,9 @@
     row.append(el('div', order.reference, 'code'));
     if (order.code) row.append(el('div', order.code, 'code'));
 
-    const actions = el('div', null, 'actions');
+    const copies = el('div', null, 'actions');
+    const decide = el('div', null, 'actions');
+    const reject = el('div', null, 'actions');
 
     function copyButton(label, text) {
       const b = el('button', label, 'quiet');
@@ -110,11 +112,12 @@
       return b;
     }
 
-    actions.append(copyButton('Copy reference', order.reference));
-    if (order.code) actions.append(copyButton('Copy card code', order.code));
+    copies.append(copyButton('Copy reference', order.reference));
+    if (order.code) copies.append(copyButton('Copy card code', order.code));
 
     const confirm = el('button', 'Confirm');
     confirm.type = 'button';
+    confirm.style.flex = '1';
     confirm.addEventListener('click', async () => {
       confirm.disabled = true;
       try {
@@ -129,7 +132,7 @@
         confirm.disabled = false;
       }
     });
-    actions.append(confirm);
+    decide.append(confirm);
 
     const reason = document.createElement('select');
     reason.setAttribute('aria-label', 'Reason for rejecting');
@@ -140,12 +143,13 @@
       option.textContent = label;
       reason.append(option);
     }
-    actions.append(reason);
+    reason.style.flex = '1';
+    reject.append(reason);
 
-    const reject = el('button', 'Reject', 'danger');
-    reject.type = 'button';
-    reject.addEventListener('click', async () => {
-      reject.disabled = true;
+    const rejectButton = el('button', 'Reject', 'danger');
+    rejectButton.type = 'button';
+    rejectButton.addEventListener('click', async () => {
+      rejectButton.disabled = true;
       try {
         await call('/api/admin?action=decide', {
           method: 'POST',
@@ -155,12 +159,14 @@
         await load();
       } catch (error) {
         row.append(el('p', error.message, 'meta'));
-        reject.disabled = false;
+        rejectButton.disabled = false;
       }
     });
-    actions.append(reject);
+    reject.append(rejectButton);
 
-    row.append(actions);
+    row.append(copies);
+    row.append(decide);
+    row.append(reject);
     return row;
   }
 
