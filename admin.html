@@ -89,7 +89,7 @@
     row.append(el('div', `${order.label} · $${order.amount.toFixed(2)}`, null));
     row.append(el('div', new Date(order.submitted).toLocaleString(), 'meta'));
 
-    // The reference is what to look for in Zelle or Wise. The code only exists on a card.
+    // The reference is what to look for in Wise. The code only exists on a card.
     row.append(el('div', order.reference, 'code'));
     if (order.code) row.append(el('div', order.code, 'code'));
 

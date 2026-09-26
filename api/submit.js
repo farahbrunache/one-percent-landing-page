@@ -1,6 +1,6 @@
 // Opens an order and returns a claim link plus how to pay.
 //
-// Zelle and Wise are told where to send and what reference to put in the note; the owner
+// A transfer is told where to send and what reference to put in the note; the owner
 // matches that reference against what lands in the account. A gift card carries its code
 // instead, which is destroyed the moment a decision is recorded.
 

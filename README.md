@@ -9,13 +9,13 @@ self-service. Nothing here requires an account anywhere.
 ## What it does
 
 1. Somebody reads `/` and decides to pay.
-2. `/buy` asks only how they are paying: Zelle in the United States, Wise anywhere else, or an
-   Amazon gift card for somebody with no bank account. No name, no email address, no phone
+2. `/buy` asks only how they are paying: Wise from anywhere, or an Amazon gift card for
+   somebody with no bank account. No name, no email address, no phone
    number, no location.
 3. They get a claim link and a six-character reference. A transfer goes to the address shown
    with that reference in the note; a gift card carries its code instead. The link is their
    only record, and nothing else stored could find their order.
-4. You see it on `/admin` — the reference to match in Zelle or Wise, or the card code to
+4. You see it on `/admin` — the reference to match in Wise, or the card code to
    redeem — then confirm or reject.
 5. Confirming destroys the stored card code, where there was one, and issues a six-digit
    access code.
@@ -46,12 +46,13 @@ In the Vercel project, under Settings and then Environment Variables:
 | `INTAKE_VERIFY_SECRET` | A long random string. The intake agent sends it back as a bearer token when it checks an access code. |
 | `RETELL_SECRET_KEY` | The row named **Secret Key** on the API Keys tab in the Retell dashboard — the name matches theirs so there is nothing to work out on a return visit. Used server-side only; it never reaches the browser. |
 | `RETELL_AGENT_ID` | The agent that runs the session. |
-| `PAY_ZELLE` | Where a Zelle payment goes, exactly as somebody should type it — the phone number or email address registered to your Zelle. Shown on the page. |
 | `PAY_WISE` | Where a Wise payment goes, exactly as somebody should type it. Shown on the page. |
 
-Either payment setting being missing does not break the site — that route refuses with a
-plain message naming the setting, and the others keep working. So you can turn one on before
-the other.
+`PAY_WISE` being missing does not break the site — that route refuses with a plain message
+naming the setting, and the gift card keeps working.
+
+Zelle was offered and was removed. It identifies by email address, and an address handed to
+anybody who opens an order is an address handed to anybody at all.
 
 Do not put any of these in a message, a commit, or a file in this repository.
 
