@@ -112,14 +112,52 @@
     }
 
     if (data.status === 'confirmed') {
-      statusLine('Call this number', data.phone);
-      body.append(el('p', 'Say this access code when you are asked for it:', 'lede'));
-      body.append(el('div', data.accessCode, 'big-code'));
+      statusLine('Status', 'Your session is ready');
+
+      lede('This runs in your browser. You will be asked for your microphone — that is the '
+        + 'session starting, and nothing is asked of you before it.');
+
+      const start = el('p', null, 'cta');
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.id = 'start';
+      button.textContent = 'Start my session';
+      start.append(button);
+      body.append(start);
+
+      const liveMsg = el('div');
+      liveMsg.id = 'callmsg';
+      liveMsg.setAttribute('aria-live', 'polite');
+      body.append(liveMsg);
+
       note([
-        'The first call is an automated assistant. It asks for the code, then three questions, and it takes about five minutes.',
-        'If the line drops, dial again and give the same code. It works for a short while and for a few calls, which covers a dropped line without letting the code be passed around.',
-        'It will not ask where you are and it will not ask for the background. A person reads what it takes down.',
+        'It is an automated assistant, not a person. It runs about thirty minutes and it '
+          + 'works through what you do, what you would charge, who your first customer is, '
+          + 'and one thing to do next.',
+        'A person reads everything it takes down.',
+        'If it drops, come back to this page and start it again. It opens a few times inside '
+          + 'a day, which covers a call that fails without letting the link be passed around.',
       ]);
+
+      button.addEventListener('click', () => startSession(button, liveMsg));
+
+      // The phone route still exists and still works. It stays visible so nobody is stuck
+      // behind a microphone permission or a browser that will not cooperate.
+      if (data.phone && data.accessCode) {
+        const fallback = el('details');
+        fallback.style.marginTop = '1.6rem';
+        const summary = el('summary', 'Cannot use the microphone? Call instead');
+        summary.style.cursor = 'pointer';
+        summary.style.color = 'var(--accent)';
+        fallback.append(summary);
+        const phone = el('div', null, 'status-line');
+        phone.append(el('div', 'Call this number', 'label'));
+        phone.append(el('div', data.phone, 'value'));
+        fallback.append(phone);
+        fallback.append(el('p', 'Say this access code when you are asked for it:', 'lede'));
+        fallback.append(el('div', data.accessCode, 'big-code'));
+        body.append(fallback);
+      }
       return;
     }
 
@@ -142,6 +180,68 @@
     } catch (error) {
       clear();
       lede(error.message);
+    }
+  }
+
+  function callMessage(target, text, kind) {
+    target.textContent = '';
+    target.className = 'msg ' + (kind || '');
+    target.append(el('p', text));
+  }
+
+  async function startSession(button, target) {
+    button.disabled = true;
+    callMessage(target, 'Opening the session…');
+
+    let data;
+    try {
+      const response = await fetch('/api/call', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ t: token }),
+      });
+      data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || `The server returned ${response.status}.`);
+    } catch (error) {
+      callMessage(target, error.message, 'bad');
+      button.disabled = false;
+      return;
+    }
+
+    let RetellWebClient;
+    try {
+      ({ RetellWebClient } = await import('https://cdn.jsdelivr.net/npm/retell-client-js-sdk/+esm'));
+    } catch (error) {
+      callMessage(
+        target,
+        'Your session opened but this browser could not load the voice client. Use the phone '
+          + 'option below, or try a different browser.',
+        'bad',
+      );
+      return;
+    }
+
+    try {
+      const client = new RetellWebClient();
+      client.on('call_started', () => callMessage(target, 'You are connected. Speak when ready.', 'good'));
+      client.on('call_ended', () => {
+        callMessage(target, 'The session has ended. A person reads what was taken down.', 'good');
+        button.disabled = false;
+        button.textContent = 'Start again';
+      });
+      client.on('error', (err) => {
+        callMessage(target, `The session stopped: ${err?.message || err}`, 'bad');
+        button.disabled = false;
+      });
+      await client.startCall({ accessToken: data.accessToken });
+    } catch (error) {
+      callMessage(
+        target,
+        `Could not start the session: ${error.message}. If your browser refused the `
+          + 'microphone, allow it and try again, or use the phone option below.',
+        'bad',
+      );
+      button.disabled = false;
     }
   }
 
