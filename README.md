@@ -9,12 +9,16 @@ self-service. Nothing here requires an account anywhere.
 ## What it does
 
 1. Somebody reads `/` and decides to pay.
-2. `/buy` takes a gift card — brand, value, code — and nothing else. No name, no email address,
-   no phone number, no location.
-3. They get a claim link. That link is their only record, and nothing else stored could find
-   their order.
-4. You see the card on `/admin`, redeem it wherever it belongs, then confirm or reject it.
-5. Confirming destroys the stored card code and issues a six-digit access code.
+2. `/buy` asks only how they are paying: Zelle in the United States, Wise anywhere else, or an
+   Amazon gift card for somebody with no bank account. No name, no email address, no phone
+   number, no location.
+3. They get a claim link and a six-character reference. A transfer goes to the address shown
+   with that reference in the note; a gift card carries its code instead. The link is their
+   only record, and nothing else stored could find their order.
+4. You see it on `/admin` — the reference to match in Zelle or Wise, or the card code to
+   redeem — then confirm or reject.
+5. Confirming destroys the stored card code, where there was one, and issues a six-digit
+   access code.
 6. Their claim link now shows the intake phone number and that access code.
 7. The intake agent calls `/api/verify` before anything else and ends the call on a refusal.
 
@@ -40,6 +44,12 @@ In the Vercel project, under Settings and then Environment Variables:
 | `ADMIN_SECRET` | A long random string, 16 characters or more. What you type to sign in at `/admin`. Make it different from the one above. |
 | `INTAKE_PHONE_NUMBER` | The number people call, exactly as it should be dialed. |
 | `INTAKE_VERIFY_SECRET` | A long random string. The intake agent sends it back as a bearer token when it checks an access code. |
+| `PAY_ZELLE` | Where a Zelle payment goes, exactly as somebody should type it — the phone number or email address registered to your Zelle. Shown on the page. |
+| `PAY_WISE` | Where a Wise payment goes, exactly as somebody should type it. Shown on the page. |
+
+Either payment setting being missing does not break the site — that route refuses with a
+plain message naming the setting, and the others keep working. So you can turn one on before
+the other.
 
 Do not put any of these in a message, a commit, or a file in this repository.
 
@@ -66,8 +76,9 @@ says the code did not work and ends the call.
 A gift card code is money in bearer form, so it is encrypted at rest and destroyed the moment
 a decision is recorded. Nothing spendable survives.
 
-A lost claim link is recovered with the card code and nothing else. Only a keyed hash of that
-code is kept, so the database alone cannot produce it.
+A lost claim link is recovered with the reference or the gift card code — whichever the
+person is holding, typed into the same box. Only a keyed hash of a card code is kept, so the
+database alone cannot produce one.
 
 An access code answers up to three times inside twenty-four hours of its first use. A dropped
 line is redialed; a code passed around does not become a week of sessions.

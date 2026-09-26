@@ -40,10 +40,11 @@
 
 <script type="module">
   const REASONS = {
-    empty: 'No balance on it',
-    used: 'Already redeemed',
-    short: 'Worth less than $7',
-    invalid: 'Code did not work',
+    not_received: 'Nothing arrived',
+    short: 'Less than $7 arrived',
+    empty: 'Gift card had no balance',
+    used: 'Gift card already redeemed',
+    invalid: 'Gift card code did not work',
     duplicate: 'Already submitted here',
   };
 
@@ -85,26 +86,32 @@
 
   function renderRow(order) {
     const row = el('div', null, 'row');
-    row.append(el('div', `${order.brand} · $${order.amount.toFixed(2)}`, null));
+    row.append(el('div', `${order.label} · $${order.amount.toFixed(2)}`, null));
     row.append(el('div', new Date(order.submitted).toLocaleString(), 'meta'));
 
-    const code = el('div', order.code, 'code');
-    row.append(code);
+    // The reference is what to look for in Zelle or Wise. The code only exists on a card.
+    row.append(el('div', order.reference, 'code'));
+    if (order.code) row.append(el('div', order.code, 'code'));
 
     const actions = el('div', null, 'actions');
 
-    const copy = el('button', 'Copy code', 'quiet');
-    copy.type = 'button';
-    copy.addEventListener('click', async () => {
-      try {
-        await navigator.clipboard.writeText(order.code);
-        copy.textContent = 'Copied';
-        setTimeout(() => { copy.textContent = 'Copy code'; }, 1500);
-      } catch {
-        copy.textContent = 'Select it by hand';
-      }
-    });
-    actions.append(copy);
+    function copyButton(label, text) {
+      const b = el('button', label, 'quiet');
+      b.type = 'button';
+      b.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(text);
+          b.textContent = 'Copied';
+        } catch {
+          b.textContent = 'Select it by hand';
+        }
+        setTimeout(() => { b.textContent = label; }, 1500);
+      });
+      return b;
+    }
+
+    actions.append(copyButton('Copy reference', order.reference));
+    if (order.code) actions.append(copyButton('Copy card code', order.code));
 
     const confirm = el('button', 'Confirm');
     confirm.type = 'button';
