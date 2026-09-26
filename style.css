@@ -37,7 +37,8 @@
   }
 
   body {
-    background: var(--paper);
+    /* Only ever visible outside the frame, on a screen wider than a phone. */
+    background: var(--paper-sunk);
     color: var(--ink);
     font-family: "Source Sans 3", ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
     font-size: 1.0625rem;
@@ -45,11 +46,22 @@
     -webkit-font-smoothing: antialiased;
   }
 
+  /* One phone-width layout at every viewport. A wider screen gets the same column
+     centered, not a different design — one thing to build, one thing to check, and
+     every person sees what every other person sees. */
   .wrap {
-    max-width: 39rem;
+    box-sizing: border-box;
+    background: var(--paper);
+    width: 100%;
+    max-width: 26rem;
+    min-height: 100vh;
     margin: 0 auto;
     padding-inline: 1.5rem;
     padding-block: 3.5rem 5rem;
+  }
+
+  @media (min-width: 27rem) {
+    .wrap { border-inline: 1px solid var(--rule); }
   }
 
   h1, h2, h3 {
@@ -61,8 +73,8 @@
   }
 
   h1 {
-    font-size: clamp(2.6rem, 9vw, 3.9rem);
-    line-height: 1.02;
+    font-size: 2.7rem;
+    line-height: 1.04;
     font-variation-settings: "opsz" 120;
   }
 
@@ -82,6 +94,10 @@
 
   p { margin: 0; }
   strong { font-weight: 600; }
+
+  /* Only footer links were coloured, so a link anywhere else came out in the browser's
+     default blue against warm paper. */
+  a { color: var(--accent); }
 
   .stack { display: flex; flex-direction: column; }
   .gap-s > * + * { margin-top: 0.7rem; }
@@ -103,7 +119,6 @@
     line-height: 1.5;
     color: var(--ink-soft);
     margin-top: 1.5rem;
-    max-width: 32rem;
   }
 
   /* The price, stated rather than sold */
@@ -302,6 +317,12 @@ button.danger { background: transparent; color: var(--ink-soft); border: 1px sol
   text-transform: uppercase;
   color: var(--ink-muted);
 }
+.status-line .value a {
+  font-family: "Source Sans 3", sans-serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
 .status-line .value {
   font-family: Fraunces, Georgia, serif;
   font-size: 2.1rem;
