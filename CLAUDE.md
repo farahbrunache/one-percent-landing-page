@@ -69,6 +69,14 @@ Every bill this pays is charged in cash, and a gift card cannot pay one — it o
 spending that would have happened anyway. Two payment routes exist for that reason: Wise
 reaches a bank account, and the gift card is for somebody who has none.
 
+`PAY_WISE` holds a Wisetag, not a payment request link. A request link was tried and cannot
+work here: on a personal Wise account it expires after five days, and only a business account
+gets a reusable one. A setting that dies every five days is worse than a handle that does not.
+
+The page renders either. A value starting `http` becomes a link to tap, anything else stays as
+text to copy, so if the account ever becomes a business one this is a settings change and no
+code change.
+
 A gift card code is money in bearer form. It is encrypted at rest and destroyed the moment a
 decision is recorded. Nothing spendable survives in the database.
 
