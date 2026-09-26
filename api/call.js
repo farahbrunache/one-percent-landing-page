@@ -6,7 +6,7 @@
 
 import { ensureSchema, findByClaimTokenHash, sql, underLimit } from '../lib/db.js';
 import { callerKey, keyedHash } from '../lib/crypto.js';
-import { CODE_WINDOW_HOURS, MAX_CODE_USES, describeStatus } from '../lib/orders.js';
+import { MAX_SESSION_STARTS, SESSION_WINDOW_HOURS, describeStatus } from '../lib/orders.js';
 import { HttpError, handle, readJson, send } from '../lib/http.js';
 
 const RETELL_CREATE_WEB_CALL = 'https://api.retellai.com/v2/create-web-call';
@@ -45,8 +45,8 @@ export default handle('POST', async (req, res) => {
   if (status !== 'confirmed') {
     throw new HttpError(
       409,
-      `This session has been used. It answers ${MAX_CODE_USES} times within ` +
-        `${CODE_WINDOW_HOURS} hours of the first one, which covers a call that drops.`,
+      `This session has been used. It opens ${MAX_SESSION_STARTS} times within ` +
+        `${SESSION_WINDOW_HOURS} hours of the first, which covers one that drops.`,
     );
   }
 
@@ -98,15 +98,14 @@ export default handle('POST', async (req, res) => {
   // one of their three.
   await sql()`
     update orders set
-      access_code_uses = access_code_uses + 1,
-      access_code_first_used_at = coalesce(access_code_first_used_at, now()),
-      access_code_used_at = now()
+      session_starts = session_starts + 1,
+      first_started_at = coalesce(first_started_at, now())
     where id = ${order.id}
   `;
 
   send(res, 200, {
     accessToken,
     callId: data.call_id || data.callId || null,
-    remaining: MAX_CODE_USES - Number(order.access_code_uses || 0) - 1,
+    remaining: MAX_SESSION_STARTS - Number(order.session_starts || 0) - 1,
   });
 });

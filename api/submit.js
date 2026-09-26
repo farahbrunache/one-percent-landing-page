@@ -7,7 +7,12 @@
 import crypto from 'node:crypto';
 import { ensureSchema, sql, underLimit } from '../lib/db.js';
 import { callerKey, claimToken, encrypt, keyedHash, normalizeCardCode } from '../lib/crypto.js';
-import { PAYMENT_METHODS, isPaymentMethod, referenceCode } from '../lib/orders.js';
+import {
+  PAYMENT_METHODS,
+  SESSION_PRICE_CENTS,
+  isPaymentMethod,
+  referenceCode,
+} from '../lib/orders.js';
 import { HttpError, handle, readJson, send } from '../lib/http.js';
 
 const DUPLICATE_MESSAGE =
@@ -41,7 +46,7 @@ export default handle('POST', async (req, res) => {
   const spec = PAYMENT_METHODS[method];
 
   let code = null;
-  let amountCents = 700;
+  let amountCents = SESSION_PRICE_CENTS;
 
   if (spec.needsCode) {
     code = normalizeCardCode(body.code);
@@ -95,10 +100,10 @@ export default handle('POST', async (req, res) => {
   try {
     await sql()`
       insert into orders (
-        claim_token_hash, card_code_hash, card_brand, card_amount_cents,
+        claim_token_hash, card_code_hash, card_amount_cents,
         card_code_encrypted, payment_method, reference_code
       ) values (
-        ${keyedHash(token)}, ${codeHash}, ${spec.label}, ${amountCents},
+        ${keyedHash(token)}, ${codeHash}, ${amountCents},
         ${code ? encrypt(code) : null}, ${method}, ${reference}
       )
     `;
