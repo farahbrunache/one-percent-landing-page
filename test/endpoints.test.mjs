@@ -70,17 +70,16 @@ check('gift card: rejects less than the price', r.statusCode === 400, r.payload)
 r = await run(submit, 'POST', '/api/submit', { method: 'amazon', amount: 'banana', code: 'ABCD1234EFGH' });
 check('gift card: rejects a non-numeric amount', r.statusCode === 400, r.payload);
 
-// Zelle and Wise carry no code, so the only thing that can stop them before the database
-// is the destination being unset. It must fail loudly rather than opening an order nobody
-// can pay into.
-delete process.env.PAY_ZELLE;
+// Wise carries no code, so the only thing that can stop it before the database is the
+// destination being unset. It must fail loudly rather than opening an order nobody can pay
+// into.
 r = await run(submit, 'POST', '/api/submit', { method: 'zelle' });
-check('zelle: refuses when no destination is configured', r.statusCode === 503, r.payload);
-check('zelle: names the missing setting', /PAY_ZELLE/.test(r.payload?.error || ''), r.payload);
+check('zelle is no longer offered', r.statusCode === 400, r.payload);
 
 delete process.env.PAY_WISE;
 r = await run(submit, 'POST', '/api/submit', { method: 'wise' });
 check('wise: refuses when no destination is configured', r.statusCode === 503, r.payload);
+check('wise: names the missing setting', /PAY_WISE/.test(r.payload?.error || ''), r.payload);
 
 check('every rejection carries a message', typeof r.payload?.error === 'string' && r.payload.error.length > 20, r.payload);
 
