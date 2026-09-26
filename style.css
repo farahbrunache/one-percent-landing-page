@@ -101,7 +101,6 @@
 
   .stack { display: flex; flex-direction: column; }
   .gap-s > * + * { margin-top: 0.7rem; }
-  .gap-m > * + * { margin-top: 1.15rem; }
 
   section { margin-top: 3.25rem; }
 
@@ -359,25 +358,3 @@ button.danger { background: transparent; color: var(--ink-soft); border: 1px sol
   word-break: break-all;
   margin-top: 0.35rem;
 }
-
-.chat { margin-top: 1.6rem; }
-.chat .log {
-  border: 1px solid var(--rule);
-  border-radius: 2px;
-  padding: 0.9rem;
-  max-height: 22rem;
-  overflow-y: auto;
-  background: var(--paper-sunk);
-}
-.chat .turn { font-size: 0.98rem; }
-.chat .turn + .turn { margin-top: 0.8rem; }
-.chat .who {
-  font-size: 0.74rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ink-muted);
-}
-.chat form { margin-top: 0.8rem; display: flex; gap: 0.5rem; }
-.chat form input { flex: 1; }
-.chat form button { padding: 0.7rem 1.1rem; font-size: 0.95rem; }

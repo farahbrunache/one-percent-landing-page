@@ -47,7 +47,7 @@ async function list(req, res) {
   requireAdmin(req);
   await ensureSchema();
   const rows = await sql()`
-    select id, card_brand, card_amount_cents, card_code_encrypted, payment_method,
+    select id, card_amount_cents, card_code_encrypted, payment_method,
            reference_code, created_at
       from orders
      where status = 'pending'
@@ -61,7 +61,7 @@ async function list(req, res) {
     pending: rows.map((r) => ({
       id: r.id,
       method: r.payment_method,
-      label: PAYMENT_METHODS[r.payment_method]?.label || r.card_brand,
+      label: PAYMENT_METHODS[r.payment_method]?.label || 'Payment',
       amount: r.card_amount_cents / 100,
       reference: r.reference_code,
       // Only a gift card carries one. A transfer is matched on the reference instead.

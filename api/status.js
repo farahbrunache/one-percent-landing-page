@@ -30,7 +30,7 @@ export default handle('GET', async (req, res) => {
 
   const payload = {
     status,
-    label: spec ? spec.label : order.card_brand,
+    label: spec ? spec.label : 'Payment',
     amount: order.card_amount_cents / 100,
     reference: order.reference_code,
     submitted: order.created_at,
@@ -45,10 +45,6 @@ export default handle('GET', async (req, res) => {
 
   if (status === 'rejected') {
     payload.reason = REJECT_REASONS[order.reject_reason] || 'The card did not check out.';
-  }
-
-  if (status === 'used') {
-    payload.usedAt = order.access_code_used_at;
   }
 
   send(res, 200, payload);

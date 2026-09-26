@@ -99,7 +99,7 @@
       }
 
       note([
-        'Come back to this page. Once the payment is matched, the phone number and your access code appear here.',
+        'Come back to this page. Once the payment is matched, the button to start your session appears here.',
         'Nothing is sent to you, because nothing about you was recorded to send it to.',
       ]);
       return;
@@ -109,7 +109,7 @@
       statusLine('Status', 'That payment did not check out');
       lede(data.reason || 'The card did not check out.');
       note([
-        'No session was opened and no access code was issued.',
+        'No session was opened, and nothing was taken for this order.',
         'If you think this is wrong, start a new order — nothing was taken for this one.',
       ]);
       return;
@@ -117,7 +117,7 @@
 
     if (data.status === 'used') {
       statusLine('Status', 'This session has been used');
-      lede('The access code on this order has been used and no longer works.');
+      lede('The session on this order has been used and cannot be opened again.');
       note(['To speak again, pay for another session.']);
       const again = el('p', null, 'cta');
       const link = el('a', 'Pay for another session');
@@ -213,8 +213,8 @@
     } catch (error) {
       callMessage(
         target,
-        'Your session opened but this browser could not load the voice client. Use the phone '
-          + 'option below, or try a different browser.',
+        'Your session opened but this browser could not load the voice client. Try a different '
+          + 'browser — Chrome, Safari or Firefox, kept up to date.',
         'bad',
       );
       return;
@@ -237,7 +237,7 @@
       callMessage(
         target,
         `Could not start the session: ${error.message}. If your browser refused the `
-          + 'microphone, allow it and try again, or use the phone option below.',
+          + 'microphone, allow it and try again.',
         'bad',
       );
       button.disabled = false;
