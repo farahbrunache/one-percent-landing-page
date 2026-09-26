@@ -38,6 +38,18 @@ owner.
 Search before deleting — readers, writers, the pages, the tests and the schema — and delete
 the setting from the project's environment variables too, or it sits there looking required.
 
+## Every schema statement must survive running twice
+
+`ensureSchema` runs on every cold start, not once at deploy. So every statement in it has to
+be safe to run against a database that has already had it run — `create table if not exists`,
+`add column if not exists`, `drop column if exists`.
+
+A plain `update` that reads a column the same function later drops works the first time and
+fails every time after it. Guard anything like that with a check on `information_schema`, or
+the site returns a database error on a page somebody is trying to pay from.
+
+There is no migration tool and no terminal to run one from. This function is the whole of it.
+
 ## The owner works from a phone and has no terminal
 
 Never end a piece of work with a command for them to run. Anything they have to do must be
