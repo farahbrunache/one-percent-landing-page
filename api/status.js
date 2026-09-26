@@ -2,7 +2,7 @@
 
 import { ensureSchema, findByClaimTokenHash, underLimit } from '../lib/db.js';
 import { callerKey, decrypt, keyedHash } from '../lib/crypto.js';
-import { REJECT_REASONS, describeStatus } from '../lib/orders.js';
+import { PAYMENT_METHODS, REJECT_REASONS, describeStatus } from '../lib/orders.js';
 import { HttpError, handle, send } from '../lib/http.js';
 
 export default handle('GET', async (req, res) => {
@@ -26,13 +26,22 @@ export default handle('GET', async (req, res) => {
 
   const status = describeStatus(order);
 
+  const spec = PAYMENT_METHODS[order.payment_method] || null;
+
   const payload = {
     status,
-    brand: order.card_brand,
+    label: spec ? spec.label : order.card_brand,
     amount: order.card_amount_cents / 100,
+    reference: order.reference_code,
     submitted: order.created_at,
     decided: order.decided_at,
   };
+
+  // Still waiting, and paid by transfer: repeat where to send it and under what reference,
+  // because this page is the only thing they kept.
+  if (status === 'pending' && spec && !spec.needsCode) {
+    payload.payTo = process.env[spec.envKey] || null;
+  }
 
   if (status === 'rejected') {
     payload.reason = REJECT_REASONS[order.reject_reason] || 'The card did not check out.';

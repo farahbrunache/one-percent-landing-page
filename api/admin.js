@@ -15,7 +15,7 @@ import {
   timingSafeEqual,
   verifyAdminToken,
 } from '../lib/crypto.js';
-import { REJECT_REASONS } from '../lib/orders.js';
+import { PAYMENT_METHODS, REJECT_REASONS } from '../lib/orders.js';
 import { HttpError, handle, readCookie, readJson, send, setCookie } from '../lib/http.js';
 
 const COOKIE = 'op_admin';
@@ -50,7 +50,8 @@ async function list(req, res) {
   requireAdmin(req);
   await ensureSchema();
   const rows = await sql()`
-    select id, card_brand, card_amount_cents, card_code_encrypted, created_at
+    select id, card_brand, card_amount_cents, card_code_encrypted, payment_method,
+           reference_code, created_at
       from orders
      where status = 'pending'
      order by created_at asc
@@ -62,9 +63,12 @@ async function list(req, res) {
   send(res, 200, {
     pending: rows.map((r) => ({
       id: r.id,
-      brand: r.card_brand,
+      method: r.payment_method,
+      label: PAYMENT_METHODS[r.payment_method]?.label || r.card_brand,
       amount: r.card_amount_cents / 100,
-      code: decrypt(r.card_code_encrypted),
+      reference: r.reference_code,
+      // Only a gift card carries one. A transfer is matched on the reference instead.
+      code: r.card_code_encrypted ? decrypt(r.card_code_encrypted) : null,
       submitted: r.created_at,
     })),
     counts: Object.fromEntries(counts.map((c) => [c.status, c.n])),

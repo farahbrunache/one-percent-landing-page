@@ -3,12 +3,20 @@
 
 import { ensureSchema, sql, underLimit } from '../lib/db.js';
 import { callerKey, claimToken, keyedHash, normalizeCardCode } from '../lib/crypto.js';
+import { normalizeReference } from '../lib/orders.js';
 import { HttpError, handle, readJson, send } from '../lib/http.js';
 
 export default handle('POST', async (req, res) => {
   const body = await readJson(req);
-  const code = normalizeCardCode(body.code);
-  if (code.length < 8) throw new HttpError(400, 'Enter the gift card code you sent.');
+  const raw = String(body.code || '').trim();
+  const reference = normalizeReference(raw);
+  const cardCode = normalizeCardCode(raw);
+
+  // A reference is six characters plus a dash; a gift card code is longer. Either is accepted
+  // without asking which one somebody is holding.
+  if (reference.length !== 7 && cardCode.length < 8) {
+    throw new HttpError(400, 'Enter your reference, or the gift card code you sent.');
+  }
 
   await ensureSchema();
 
@@ -17,13 +25,16 @@ export default handle('POST', async (req, res) => {
   }
 
   const rows = await sql()`
-    select id from orders where card_code_hash = ${keyedHash(code)} limit 1
+    select id from orders
+     where reference_code = ${reference.length === 7 ? reference : null}
+        or card_code_hash = ${cardCode.length >= 8 ? keyedHash(cardCode) : null}
+     limit 1
   `;
   if (!rows.length) {
     throw new HttpError(
       404,
-      'No order here was paid for with that code. Check the code, or submit it if you have ' +
-        'not yet.',
+      'Nothing here matches that. Check your reference or gift card code, or start an order if ' +
+        'you have not yet.',
     );
   }
 

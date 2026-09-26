@@ -51,25 +51,47 @@ let r = await run(submit, 'GET', '/api/submit');
 check('rejects GET with 405', r.statusCode === 405, r.payload);
 check('names the allowed method', r.headers.allow === 'POST', r.headers);
 
-r = await run(submit, 'POST', '/api/submit', { brand: 'Nope', amount: 7, code: 'ABCDEFGH' });
-check('rejects an unknown card brand', r.statusCode === 400, r.payload);
+r = await run(submit, 'POST', '/api/submit', { method: 'paypal' });
+check('rejects an unknown payment method', r.statusCode === 400, r.payload);
 
-r = await run(submit, 'POST', '/api/submit', { brand: 'Amazon', amount: 7, code: 'short' });
-check('rejects a code that is too short', r.statusCode === 400, r.payload);
+r = await run(submit, 'POST', '/api/submit', {});
+check('rejects a missing payment method', r.statusCode === 400, r.payload);
 
-r = await run(submit, 'POST', '/api/submit', { brand: 'Amazon', amount: 7, code: 'A'.repeat(70) });
-check('rejects a code that is too long', r.statusCode === 400, r.payload);
+r = await run(submit, 'POST', '/api/submit', { method: 'amazon', amount: 7, code: 'short' });
+check('gift card: rejects a code that is too short', r.statusCode === 400, r.payload);
 
-r = await run(submit, 'POST', '/api/submit', { brand: 'Amazon', amount: 3, code: 'ABCD1234EFGH' });
-check('rejects less than the price', r.statusCode === 400, r.payload);
+r = await run(submit, 'POST', '/api/submit', { method: 'amazon', amount: 7, code: 'A'.repeat(70) });
+check('gift card: rejects a code that is too long', r.statusCode === 400, r.payload);
 
-r = await run(submit, 'POST', '/api/submit', { brand: 'Amazon', amount: 'banana', code: 'ABCD1234EFGH' });
-check('rejects a non-numeric amount', r.statusCode === 400, r.payload);
+r = await run(submit, 'POST', '/api/submit', { method: 'amazon', amount: 3, code: 'ABCD1234EFGH' });
+check('gift card: rejects less than the price', r.statusCode === 400, r.payload);
 
-r = await run(submit, 'POST', '/api/submit', { brand: 'Amazon', amount: 9999, code: 'ABCD1234EFGH' });
-check('rejects an absurd amount', r.statusCode === 400, r.payload);
+r = await run(submit, 'POST', '/api/submit', { method: 'amazon', amount: 'banana', code: 'ABCD1234EFGH' });
+check('gift card: rejects a non-numeric amount', r.statusCode === 400, r.payload);
+
+// Zelle and Wise carry no code, so the only thing that can stop them before the database
+// is the destination being unset. It must fail loudly rather than opening an order nobody
+// can pay into.
+delete process.env.PAY_ZELLE;
+r = await run(submit, 'POST', '/api/submit', { method: 'zelle' });
+check('zelle: refuses when no destination is configured', r.statusCode === 503, r.payload);
+check('zelle: names the missing setting', /PAY_ZELLE/.test(r.payload?.error || ''), r.payload);
+
+delete process.env.PAY_WISE;
+r = await run(submit, 'POST', '/api/submit', { method: 'wise' });
+check('wise: refuses when no destination is configured', r.statusCode === 503, r.payload);
 
 check('every rejection carries a message', typeof r.payload?.error === 'string' && r.payload.error.length > 20, r.payload);
+
+// The reference is spoken and typed, so it must avoid characters people confuse.
+const { referenceCode, normalizeReference } = await import('../lib/orders.js');
+let refOk = true;
+for (let i = 0; i < 500; i += 1) {
+  const ref = referenceCode((n) => Math.floor(Math.random() * n));
+  if (!/^[A-Z0-9]{3}-[A-Z0-9]{3}$/.test(ref) || /[O0I1S5]/.test(ref)) { refOk = false; break; }
+}
+check('reference is six readable characters, no lookalikes', refOk);
+check('reference normalizes from loose typing', normalizeReference(' abc def ') === 'ABC-DEF', normalizeReference(' abc def '));
 
 console.log('verify (the paid gate)');
 r = await run(verify, 'POST', '/api/verify', { accessCode: '123456' });

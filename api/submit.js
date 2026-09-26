@@ -1,44 +1,68 @@
-// Takes a gift card and returns a claim link. Collects nothing else.
+// Opens an order and returns a claim link plus how to pay.
+//
+// Zelle and Wise are told where to send and what reference to put in the note; the owner
+// matches that reference against what lands in the account. A gift card carries its code
+// instead, which is destroyed the moment a decision is recorded.
 
+import crypto from 'node:crypto';
 import { ensureSchema, sql, underLimit } from '../lib/db.js';
-import {
-  callerKey,
-  claimToken,
-  encrypt,
-  keyedHash,
-  normalizeCardCode,
-} from '../lib/crypto.js';
-import { CARD_BRANDS } from '../lib/orders.js';
+import { callerKey, claimToken, encrypt, keyedHash, normalizeCardCode } from '../lib/crypto.js';
+import { PAYMENT_METHODS, isPaymentMethod, referenceCode } from '../lib/orders.js';
 import { HttpError, handle, readJson, send } from '../lib/http.js';
 
 const DUPLICATE_MESSAGE =
-  'That card has already been submitted. If you have lost your link, recover it with the same ' +
-  'card code.';
+  'That gift card has already been submitted. If you have lost your link, recover it with the ' +
+  'same code.';
+
+function payTo(method) {
+  const spec = PAYMENT_METHODS[method];
+  if (!spec.envKey) return null;
+  const where = process.env[spec.envKey];
+  if (!where) {
+    throw new HttpError(
+      503,
+      `${spec.label} is not set up yet — ${spec.envKey} is missing from the project settings. ` +
+        'Pick another way to pay, or try again later.',
+    );
+  }
+  return where;
+}
 
 export default handle('POST', async (req, res) => {
   const body = await readJson(req);
 
-  const brand = String(body.brand || '').trim();
-  if (!CARD_BRANDS.includes(brand)) {
-    throw new HttpError(400, `Pick a card type. Accepted: ${CARD_BRANDS.join(', ')}.`);
-  }
-
-  const code = normalizeCardCode(body.code);
-  if (code.length < 8) {
+  const method = String(body.method || '').trim().toLowerCase();
+  if (!isPaymentMethod(method)) {
     throw new HttpError(
       400,
-      'That does not look like a gift card code. Check it and enter it again — dashes and ' +
-        'spaces do not matter.',
+      `Choose how you are paying: ${Object.values(PAYMENT_METHODS).map((m) => m.label).join(', ')}.`,
     );
   }
-  if (code.length > 64) {
-    throw new HttpError(400, 'That code is longer than any gift card code. Check it.');
+  const spec = PAYMENT_METHODS[method];
+
+  let code = null;
+  let amountCents = 700;
+
+  if (spec.needsCode) {
+    code = normalizeCardCode(body.code);
+    if (code.length < 8) {
+      throw new HttpError(
+        400,
+        'That does not look like a gift card code. Check it and enter it again — dashes and ' +
+          'spaces do not matter.',
+      );
+    }
+    if (code.length > 64) throw new HttpError(400, 'That code is longer than any gift card code.');
+
+    const amount = Number(body.amount);
+    if (!Number.isFinite(amount) || amount < 7 || amount > 500) {
+      throw new HttpError(400, 'Enter what the card is worth, in dollars, between 7 and 500.');
+    }
+    amountCents = Math.round(amount * 100);
   }
 
-  const amount = Number(body.amount);
-  if (!Number.isFinite(amount) || amount < 7 || amount > 500) {
-    throw new HttpError(400, 'Enter what the card is worth, in dollars, between 7 and 500.');
-  }
+  // Fails before anything is written if the destination is not configured.
+  const where = payTo(method);
 
   await ensureSchema();
 
@@ -46,33 +70,53 @@ export default handle('POST', async (req, res) => {
     throw new HttpError(429, 'Too many submissions from here in the last hour. Try later.');
   }
 
-  const codeHash = keyedHash(normalizeCardCode(code));
-
-  // A code already sitting here is either a duplicate submission or somebody trying to buy
-  // twice with one card. Either way it does not create a second order.
-  const existing = await sql()`
-    select status from orders where card_code_hash = ${codeHash} limit 1
-  `;
-  if (existing.length) throw new HttpError(409, DUPLICATE_MESSAGE);
+  const codeHash = code ? keyedHash(code) : null;
+  if (codeHash) {
+    const existing = await sql()`
+      select 1 from orders where card_code_hash = ${codeHash} limit 1
+    `;
+    if (existing.length) throw new HttpError(409, DUPLICATE_MESSAGE);
+  }
 
   const token = claimToken();
+
+  // Six characters from a reduced alphabet collide eventually. Try a few rather than
+  // handing two live orders the same reference for the owner to tell apart.
+  let reference = null;
+  for (let attempt = 0; attempt < 8 && !reference; attempt += 1) {
+    const candidate = referenceCode((n) => crypto.randomInt(0, n));
+    const clash = await sql()`select 1 from orders where reference_code = ${candidate} limit 1`;
+    if (!clash.length) reference = candidate;
+  }
+  if (!reference) {
+    throw new HttpError(503, 'Could not open an order just now. Try again in a moment.');
+  }
 
   try {
     await sql()`
       insert into orders (
-        claim_token_hash, card_code_hash, card_brand, card_amount_cents, card_code_encrypted
+        claim_token_hash, card_code_hash, card_brand, card_amount_cents,
+        card_code_encrypted, payment_method, reference_code
       ) values (
-        ${keyedHash(token)}, ${codeHash}, ${brand}, ${Math.round(amount * 100)}, ${encrypt(code)}
+        ${keyedHash(token)}, ${codeHash}, ${spec.label}, ${amountCents},
+        ${code ? encrypt(code) : null}, ${method}, ${reference}
       )
     `;
   } catch (error) {
-    // Two submissions of one code can pass the check above at the same moment. The unique
-    // index is what actually decides it, so say the same thing the check would have said.
-    if (String(error.message || '').includes('orders_card_code_hash_idx')) {
-      throw new HttpError(409, DUPLICATE_MESSAGE);
+    const message = String(error.message || '');
+    if (message.includes('orders_card_code_hash_idx')) throw new HttpError(409, DUPLICATE_MESSAGE);
+    if (message.includes('orders_reference_code_idx')) {
+      throw new HttpError(503, 'Could not open an order just now. Try again in a moment.');
     }
     throw error;
   }
 
-  send(res, 201, { claim: `/claim?t=${token}` });
+  send(res, 201, {
+    claim: `/claim?t=${token}`,
+    reference,
+    method,
+    label: spec.label,
+    payTo: where,
+    needsCode: spec.needsCode,
+  });
 });
