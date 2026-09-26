@@ -45,6 +45,7 @@ const verify = (await import('../api/verify.js')).default;
 const status = (await import('../api/status.js')).default;
 const recover = (await import('../api/recover.js')).default;
 const admin = (await import('../api/admin.js')).default;
+const call = (await import('../api/call.js')).default;
 
 console.log('submit');
 let r = await run(submit, 'GET', '/api/submit');
@@ -128,6 +129,20 @@ r = await run(admin, 'POST', '/api/admin?action=nonsense', {});
 check('an unknown action is refused', r.statusCode === 400, r.payload);
 r = await run(admin, 'DELETE', '/api/admin');
 check('rejects an unsupported method', r.statusCode === 405, r.payload);
+
+console.log('starting a session');
+r = await run(call, 'GET', '/api/call');
+check('rejects GET', r.statusCode === 405, r.payload);
+
+r = await run(call, 'POST', '/api/call', {});
+check('rejects a request with no claim token', r.statusCode === 400, r.payload);
+
+delete process.env.RETELL_API_KEY;
+delete process.env.RETELL_AGENT_ID;
+r = await run(call, 'POST', '/api/call', { t: 'something' });
+check('refuses when the voice service is not configured', r.statusCode === 503, r.payload);
+check('names what is missing and that the phone still works',
+  /RETELL_API_KEY/.test(r.payload?.error || '') && /phone/.test(r.payload?.error || ''), r.payload);
 
 console.log('');
 if (failures) { console.log(failures + ' FAILED'); process.exit(1); }

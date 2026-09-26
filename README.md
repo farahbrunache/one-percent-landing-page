@@ -44,6 +44,8 @@ In the Vercel project, under Settings and then Environment Variables:
 | `ADMIN_SECRET` | A long random string, 16 characters or more. What you type to sign in at `/admin`. Make it different from the one above. |
 | `INTAKE_PHONE_NUMBER` | The number people call, exactly as it should be dialed. |
 | `INTAKE_VERIFY_SECRET` | A long random string. The intake agent sends it back as a bearer token when it checks an access code. |
+| `RETELL_API_KEY` | From the API Keys tab in the Retell dashboard. Used server-side only; it never reaches the browser. |
+| `RETELL_AGENT_ID` | The agent that runs the session. |
 | `PAY_ZELLE` | Where a Zelle payment goes, exactly as somebody should type it — the phone number or email address registered to your Zelle. Shown on the page. |
 | `PAY_WISE` | Where a Wise payment goes, exactly as somebody should type it. Shown on the page. |
 
@@ -56,7 +58,21 @@ Do not put any of these in a message, a commit, or a file in this repository.
 Changing `CARD_ENCRYPTION_KEY` makes every card code and access code already in the database
 unreadable. Set it once, before anybody pays.
 
-### 3. The intake agent
+### 3. How a session starts
+
+The claim page shows a button, not a phone number. The browser asks `/api/call` with the
+claim token, the server checks the order is confirmed and not spent, asks Retell for a web
+call, and hands the browser a one-time access token. Nothing is dialed and no code is spoken.
+
+That makes the gate structural: a web call cannot be reached except through a link somebody
+paid for. The six-digit access code stays in the database and on the page as a fallback for
+anybody whose browser will not give up its microphone, and the agent's code check still
+works for them.
+
+The reference travels with the call as metadata, so a transcript can be matched back to the
+payment it was bought with.
+
+### 4. The phone fallback, if you keep one
 
 Give the agent one step before its first question: ask for the six-digit access code and POST
 it to `https://farahbrunache.com/api/verify`.
