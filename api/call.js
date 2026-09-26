@@ -22,7 +22,7 @@ export default handle('POST', async (req, res) => {
     throw new HttpError(
       503,
       'Sessions cannot start yet — RETELL_SECRET_KEY or RETELL_AGENT_ID is missing from the ' +
-        'project settings. The phone number below still works.',
+        'project settings.',
     );
   }
 

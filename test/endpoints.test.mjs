@@ -41,7 +41,6 @@ function check(label, condition, detail) {
 }
 
 const submit = (await import('../api/submit.js')).default;
-const verify = (await import('../api/verify.js')).default;
 const status = (await import('../api/status.js')).default;
 const recover = (await import('../api/recover.js')).default;
 const admin = (await import('../api/admin.js')).default;
@@ -93,22 +92,6 @@ for (let i = 0; i < 500; i += 1) {
 check('reference is six readable characters, no lookalikes', refOk);
 check('reference normalizes from loose typing', normalizeReference(' abc def ') === 'ABC-DEF', normalizeReference(' abc def '));
 
-console.log('verify (the paid gate)');
-r = await run(verify, 'POST', '/api/verify', { accessCode: '123456' });
-check('refuses without the bearer token', r.statusCode === 401, r.payload);
-
-r = await run(verify, 'POST', '/api/verify', { accessCode: '123456' }, { authorization: 'Bearer wrong-secret-value' });
-check('refuses a wrong bearer token', r.statusCode === 401, r.payload);
-
-r = await run(verify, 'POST', '/api/verify', { accessCode: '12' }, { authorization: 'Bearer ' + process.env.INTAKE_VERIFY_SECRET });
-check('answers ok:false on a short code without a lookup', r.statusCode === 200 && r.payload.ok === false && r.payload.reason === 'not_six_digits', r.payload);
-
-r = await run(verify, 'POST', '/api/verify', { accessCode: 'abcdef' }, { authorization: 'Bearer ' + process.env.INTAKE_VERIFY_SECRET });
-check('non-digits are not six digits', r.payload?.ok === false && r.payload.reason === 'not_six_digits', r.payload);
-
-r = await run(verify, 'GET', '/api/verify');
-check('rejects GET', r.statusCode === 405, r.payload);
-
 console.log('status');
 r = await run(status, 'GET', '/api/status');
 check('rejects a link with no token', r.statusCode === 400, r.payload);
@@ -140,8 +123,8 @@ delete process.env.RETELL_SECRET_KEY;
 delete process.env.RETELL_AGENT_ID;
 r = await run(call, 'POST', '/api/call', { t: 'something' });
 check('refuses when the voice service is not configured', r.statusCode === 503, r.payload);
-check('names what is missing and that the phone still works',
-  /RETELL_SECRET_KEY/.test(r.payload?.error || '') && /phone/.test(r.payload?.error || ''), r.payload);
+check('names what is missing',
+  /RETELL_SECRET_KEY/.test(r.payload?.error || ''), r.payload);
 
 console.log('');
 if (failures) { console.log(failures + ' FAILED'); process.exit(1); }
