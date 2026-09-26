@@ -42,8 +42,6 @@ In the Vercel project, under Settings and then Environment Variables:
 |---|---|
 | `CARD_ENCRYPTION_KEY` | A long random string, 32 characters or more. Generate it in a password manager. Everything secret in the database is encrypted or keyed under it. |
 | `ADMIN_SECRET` | A long random string, 16 characters or more. What you type to sign in at `/admin`. Make it different from the one above. |
-| `INTAKE_PHONE_NUMBER` | The number people call, exactly as it should be dialed. |
-| `INTAKE_VERIFY_SECRET` | A long random string. The intake agent sends it back as a bearer token when it checks an access code. |
 | `RETELL_SECRET_KEY` | The row named **Secret Key** on the API Keys tab in the Retell dashboard — the name matches theirs so there is nothing to work out on a return visit. Used server-side only; it never reaches the browser. |
 | `RETELL_AGENT_ID` | The agent that runs the session. |
 | `PAY_WISE` | Where a Wise payment goes, exactly as somebody should type it. Shown on the page. |
@@ -66,27 +64,18 @@ claim token, the server checks the order is confirmed and not spent, asks Retell
 call, and hands the browser a one-time access token. Nothing is dialed and no code is spoken.
 
 That makes the gate structural: a web call cannot be reached except through a link somebody
-paid for. The six-digit access code stays in the database and on the page as a fallback for
-anybody whose browser will not give up its microphone, and the agent's code check still
-works for them.
+paid for. There is no phone number and no spoken code — a web call is not dialed, so there
+is nothing to dial and nothing to read out.
 
 The reference travels with the call as metadata, so a transcript can be matched back to the
 payment it was bought with.
 
 ### 4. The phone fallback, if you keep one
 
-Give the agent one step before its first question: ask for the six-digit access code and POST
-it to `https://farahbrunache.com/api/verify`.
-
-```
-POST /api/verify
-Authorization: Bearer <INTAKE_VERIFY_SECRET>
-{ "accessCode": "123456" }
-```
-
-It answers `{ "ok": true }` or `{ "ok": false, "reason": "..." }`, where the reason is one of
-`not_six_digits`, `no_such_code`, `already_used` or `expired`. On anything but `ok`, the agent
-says the code did not work and ends the call.
+The claim page holds a button. The browser asks `/api/call` with the claim token, the server
+checks the order is confirmed and not spent, asks Retell for a web call, and hands the
+browser a one-time token. The reference travels with the call as metadata, so a transcript
+can be matched back to the payment that bought it.
 
 ## Rules built into the code
 

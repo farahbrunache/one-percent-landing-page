@@ -6,11 +6,8 @@
 
 import { ensureSchema, sql, underLimit } from '../lib/db.js';
 import {
-  accessCode,
   callerKey,
   decrypt,
-  encrypt,
-  keyedHash,
   signAdminToken,
   timingSafeEqual,
   verifyAdminToken,
@@ -104,34 +101,19 @@ async function decide(req, res) {
     throw new HttpError(400, 'The decision is either confirm or reject.');
   }
 
-  // Six digits collide eventually. Try a few times rather than handing two live orders the
-  // same spoken code.
-  for (let attempt = 0; attempt < 8; attempt += 1) {
-    const code = accessCode();
-    const hash = keyedHash(code);
-    const clash = await sql()`
-      select 1 from orders where access_code_hash = ${hash} and status = 'confirmed' limit 1
-    `;
-    if (clash.length) continue;
-
-    const done = await sql()`
-      update orders set
-        status = 'confirmed',
-        access_code_hash = ${hash},
-        access_code_encrypted = ${encrypt(code)},
-        card_code_encrypted = null,
-        decided_at = now()
-      where id = ${id} and status = 'pending'
-      returning id
-    `;
-    if (!done.length) throw new HttpError(409, 'That order was already decided.');
-    return send(res, 200, { ok: true, status: 'confirmed' });
-  }
-
-  throw new HttpError(
-    503,
-    'Could not find an unused access code after eight tries. Try again in a moment.',
-  );
+  const done = await sql()`
+    update orders set
+      status = 'confirmed',
+      card_code_encrypted = null,
+      decided_at = now()
+    where id = ${id} and status = 'pending'
+    returning id
+  `;
+  if (!done.length) throw new HttpError(409, 'That order was already decided.');
+  // Confirming used to mint a six-digit code for somebody to read down a phone line. A web
+  // call starts from the claim page, which already proves who they are, so there is nothing
+  // to mint and nothing to say out loud.
+  send(res, 200, { ok: true, status: 'confirmed' });
 }
 
 export default handle(['GET', 'POST'], async (req, res) => {

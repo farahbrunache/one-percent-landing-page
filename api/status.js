@@ -47,19 +47,6 @@ export default handle('GET', async (req, res) => {
     payload.reason = REJECT_REASONS[order.reject_reason] || 'The card did not check out.';
   }
 
-  if (status === 'confirmed') {
-    const number = process.env.INTAKE_PHONE_NUMBER;
-    if (!number) {
-      throw new HttpError(
-        503,
-        'This order is confirmed but no intake number is configured yet. Set ' +
-          'INTAKE_PHONE_NUMBER in the project settings.',
-      );
-    }
-    payload.phone = number;
-    payload.accessCode = decrypt(order.access_code_encrypted);
-  }
-
   if (status === 'used') {
     payload.usedAt = order.access_code_used_at;
   }

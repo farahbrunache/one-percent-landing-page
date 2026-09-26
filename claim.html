@@ -157,23 +157,6 @@
 
       button.addEventListener('click', () => startSession(button, liveMsg));
 
-      // The phone route still exists and still works. It stays visible so nobody is stuck
-      // behind a microphone permission or a browser that will not cooperate.
-      if (data.phone && data.accessCode) {
-        const fallback = el('details');
-        fallback.style.marginTop = '1.6rem';
-        const summary = el('summary', 'Cannot use the microphone? Call instead');
-        summary.style.cursor = 'pointer';
-        summary.style.color = 'var(--accent)';
-        fallback.append(summary);
-        const phone = el('div', null, 'status-line');
-        phone.append(el('div', 'Call this number', 'label'));
-        phone.append(el('div', data.phone, 'value'));
-        fallback.append(phone);
-        fallback.append(el('p', 'Say this access code when you are asked for it:', 'lede'));
-        fallback.append(el('div', data.accessCode, 'big-code'));
-        body.append(fallback);
-      }
       return;
     }
 
