@@ -140,6 +140,26 @@
     return b;
   }
 
+  // The destination is whatever is configured — a handle, an address, or a payment link.
+  // A link is rendered as one so it can be tapped; anything else stays as text to copy.
+  function looksLikeUrl(value) {
+    return /^https?:\/\//i.test(String(value || '').trim());
+  }
+
+  function payToNode(value) {
+    if (!looksLikeUrl(value)) return el('div', value, 'value mono');
+    const wrap = el('div', null, 'value');
+    const a = el('a', 'Open the payment page');
+    a.href = value;
+    a.rel = 'noopener noreferrer';
+    a.target = '_blank';
+    wrap.append(a);
+    const raw = el('div', value, 'meta mono');
+    raw.style.cssText = 'margin-top:0.4rem;font-size:0.85rem;word-break:break-all;';
+    wrap.append(raw);
+    return wrap;
+  }
+
   function box(target, kind) {
     const node = document.getElementById(target);
     node.hidden = false;
@@ -178,8 +198,8 @@
         + 'reference in the note so it can be matched to you.'));
 
       const to = el('div', null, 'status-line');
-      to.append(el('div', `Send $7 by ${data.label} to`, 'label'));
-      to.append(el('div', data.payTo, 'value mono'));
+      to.append(el('div', `Send $7 by ${data.label}`, 'label'));
+      to.append(payToNode(data.payTo));
       node.append(to);
     }
 

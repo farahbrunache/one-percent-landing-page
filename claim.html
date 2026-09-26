@@ -71,8 +71,24 @@
       statusLine('Status', 'Waiting on your payment');
 
       if (data.payTo) {
-        lede(`Send $7 by ${data.label} to the address below, with your reference in the note.`);
-        statusLine(`Send $7 by ${data.label} to`, data.payTo).querySelector('.value').classList.add('mono');
+        lede(`Send $7 by ${data.label}, with your reference in the note.`);
+        const wrap = el('div', null, 'status-line');
+        wrap.append(el('div', `Send $7 by ${data.label}`, 'label'));
+        if (/^https?:\/\//i.test(data.payTo)) {
+          const value = el('div', null, 'value');
+          const a = el('a', 'Open the payment page');
+          a.href = data.payTo;
+          a.rel = 'noopener noreferrer';
+          a.target = '_blank';
+          value.append(a);
+          const raw = el('div', data.payTo, 'meta mono');
+          raw.style.cssText = 'margin-top:0.4rem;font-size:0.85rem;word-break:break-all;';
+          value.append(raw);
+          wrap.append(value);
+        } else {
+          wrap.append(el('div', data.payTo, 'value mono'));
+        }
+        body.append(wrap);
       } else {
         lede('Your card is in and has not been checked yet. This is done by hand, so it is not instant.');
       }
