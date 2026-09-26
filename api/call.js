@@ -16,12 +16,12 @@ export default handle('POST', async (req, res) => {
   const token = String(body.t || '').trim();
   if (!token) throw new HttpError(400, 'This link is missing its claim token.');
 
-  const apiKey = process.env.RETELL_API_KEY;
+  const apiKey = process.env.RETELL_SECRET_KEY;
   const agentId = process.env.RETELL_AGENT_ID;
   if (!apiKey || !agentId) {
     throw new HttpError(
       503,
-      'Sessions cannot start yet — RETELL_API_KEY or RETELL_AGENT_ID is missing from the ' +
+      'Sessions cannot start yet — RETELL_SECRET_KEY or RETELL_AGENT_ID is missing from the ' +
         'project settings. The phone number below still works.',
     );
   }

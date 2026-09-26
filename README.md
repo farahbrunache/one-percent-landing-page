@@ -44,7 +44,7 @@ In the Vercel project, under Settings and then Environment Variables:
 | `ADMIN_SECRET` | A long random string, 16 characters or more. What you type to sign in at `/admin`. Make it different from the one above. |
 | `INTAKE_PHONE_NUMBER` | The number people call, exactly as it should be dialed. |
 | `INTAKE_VERIFY_SECRET` | A long random string. The intake agent sends it back as a bearer token when it checks an access code. |
-| `RETELL_API_KEY` | From the API Keys tab in the Retell dashboard. Used server-side only; it never reaches the browser. |
+| `RETELL_SECRET_KEY` | The row named **Secret Key** on the API Keys tab in the Retell dashboard — the name matches theirs so there is nothing to work out on a return visit. Used server-side only; it never reaches the browser. |
 | `RETELL_AGENT_ID` | The agent that runs the session. |
 | `PAY_ZELLE` | Where a Zelle payment goes, exactly as somebody should type it — the phone number or email address registered to your Zelle. Shown on the page. |
 | `PAY_WISE` | Where a Wise payment goes, exactly as somebody should type it. Shown on the page. |
