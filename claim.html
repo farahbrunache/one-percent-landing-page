@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Your session — One Percent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&display=swap">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<main class="wrap">
+
+  <a class="back" href="/">&larr; One Percent</a>
+
+  <h1>Your session</h1>
+
+  <div id="body" aria-live="polite">
+    <p class="lede">Reading your order&hellip;</p>
+  </div>
+
+  <footer class="stack gap-s">
+    <p>
+      Bookmark this page. It is the only record of your order, and nothing about you was
+      recorded that could find it any other way.
+    </p>
+    <p>
+      Lost it? <a href="/buy">Enter your card code again</a> and you get a new link.
+    </p>
+  </footer>
+
+</main>
+
+<script type="module">
+  const body = document.getElementById('body');
+  const token = new URLSearchParams(location.search).get('t');
+
+  function el(tag, text, className) {
+    const node = document.createElement(tag);
+    if (text) node.textContent = text;
+    if (className) node.className = className;
+    return node;
+  }
+
+  function clear() { body.textContent = ''; }
+
+  function lede(text) { body.append(el('p', text, 'lede')); }
+
+  function statusLine(label, value) {
+    const wrap = el('div', null, 'status-line');
+    wrap.append(el('div', label, 'label'));
+    wrap.append(el('div', value, 'value'));
+    body.append(wrap);
+    return wrap;
+  }
+
+  function note(lines) {
+    const box = el('div', null, 'note stack gap-s');
+    for (const line of lines) box.append(el('p', line));
+    body.append(box);
+  }
+
+  function render(data) {
+    clear();
+
+    if (data.status === 'pending') {
+      statusLine('Status', 'Waiting on the card check');
+      lede('Your card is in and has not been checked yet. This is done by hand, so it is not instant.');
+      note([
+        'Come back to this page. When the card checks out, the phone number and your access code appear here.',
+        'Nothing is sent to you, because nothing about you was recorded to send it to.',
+      ]);
+      return;
+    }
+
+    if (data.status === 'rejected') {
+      statusLine('Status', 'The card did not check out');
+      lede(data.reason || 'The card did not check out.');
+      note([
+        'No session was opened and no access code was issued.',
+        'If you think this is wrong, send a different card — the first one was not charged for anything.',
+      ]);
+      return;
+    }
+
+    if (data.status === 'used') {
+      statusLine('Status', 'This session has been used');
+      lede('The access code on this order has been used and no longer works.');
+      note(['To speak again, pay for another session.']);
+      const again = el('p', null, 'cta');
+      const link = el('a', 'Pay for another session');
+      link.href = '/buy';
+      again.append(link);
+      body.append(again);
+      return;
+    }
+
+    if (data.status === 'confirmed') {
+      statusLine('Call this number', data.phone);
+      body.append(el('p', 'Say this access code when you are asked for it:', 'lede'));
+      body.append(el('div', data.accessCode, 'big-code'));
+      note([
+        'The first call is an automated assistant. It asks for the code, then three questions, and it takes about five minutes.',
+        'If the line drops, dial again and give the same code. It works for a short while and for a few calls, which covers a dropped line without letting the code be passed around.',
+        'It will not ask where you are and it will not ask for the background. A person reads what it takes down.',
+      ]);
+      return;
+    }
+
+    lede('This order is in a state this page does not recognize.');
+  }
+
+  async function load() {
+    if (!token) {
+      clear();
+      lede('This link is missing its claim token.');
+      note(['Open the link you were given in full, or recover it with your card code from the payment page.']);
+      return;
+    }
+    try {
+      const response = await fetch(`/api/status?t=${encodeURIComponent(token)}`);
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || `The server returned ${response.status}.`);
+      try { localStorage.setItem('onepercent.claim', location.pathname + location.search); } catch {}
+      render(data);
+    } catch (error) {
+      clear();
+      lede(error.message);
+    }
+  }
+
+  load();
+</script>
+</body>
+</html>
