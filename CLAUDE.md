@@ -88,3 +88,12 @@ the title and body set at creation.
 
 Never watch a pull request. After opening one, do not subscribe to its activity and do not
 wait for its checks. The harness subscribes on its own; unsubscribe straight away.
+
+Auto-merge is on in this repository. Turn it on for the pull request as soon as it is open,
+squash, and it completes itself.
+
+The risk here is not technical. There is no database, no secret and no code that runs for
+anybody — it is a page. What can go wrong is what the page claims, so a change to the price,
+to what somebody gets for it, to what happens after they pay, or to the refund line waits
+for a person to read it. Everything else — wording, spacing, colour, layout, a link, the
+agent instructions — goes in on its own.
