@@ -11,6 +11,17 @@ sessions belongs there, not here.
 One Percent is paid work and a separate product from Skills Economy, which is free and
 self-service. Nothing here requires an account anywhere.
 
+## There is nothing to build
+
+Six files, all static, no package manager and no build step. `vercel.json` says so outright
+— no framework, no install command, no build command, served from the repository root.
+
+It says so because the hosting project was set up when this repository also held the
+checkout, which had a package manager and needed one. After the split those settings were
+still trying to build a site that has nothing to build, and every deployment failed.
+
+Never add a build step here. If this page ever needs one, it has stopped being a page.
+
 ## One phone-width layout at every viewport
 
 The same column at every screen size, centred on anything wider than a phone. Never a second
