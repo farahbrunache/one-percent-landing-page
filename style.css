@@ -15,8 +15,7 @@
   }
 
   body {
-    /* Only ever visible outside the frame, on a screen wider than a phone. */
-    background: var(--paper-sunk);
+    background: var(--paper);
     color: var(--ink);
     font-family: "Source Sans 3", ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
     font-size: 1.0625rem;
@@ -24,22 +23,18 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* One phone-width layout at every viewport. A wider screen gets the same column
-     centered, not a different design — one thing to build, one thing to check, and
-     every person sees what every other person sees. */
+  /* One layout at every viewport. Not a phone-width column held inside a frame — that is
+     the app's shape, not this page's, and on a desktop it read as a slot with the page
+     going on around it. The same column, allowed to grow to a readable line length and
+     then stop. Still one thing to build and one thing to check: there is no second layout
+     underneath a breakpoint, only a width that runs out. */
   .wrap {
     box-sizing: border-box;
-    background: var(--paper);
     width: 100%;
-    max-width: 26rem;
-    min-height: 100vh;
+    max-width: 40rem;
     margin: 0 auto;
-    padding-inline: 1.5rem;
+    padding-inline: clamp(1.5rem, 4vw, 2.5rem);
     padding-block: 3.5rem 5rem;
-  }
-
-  @media (min-width: 27rem) {
-    .wrap { border-inline: 1px solid var(--rule); }
   }
 
   h1, h2, h3 {
@@ -51,7 +46,8 @@
   }
 
   h1 {
-    font-size: 2.7rem;
+    /* Grows with the column and stops with it. One rule, not a desktop size and a phone one. */
+    font-size: clamp(2.7rem, 7vw, 3.4rem);
     line-height: 1.04;
     font-variation-settings: "opsz" 120;
   }

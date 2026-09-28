@@ -22,17 +22,25 @@ still trying to build a site that has nothing to build, and every deployment fai
 
 Never add a build step here. If this page ever needs one, it has stopped being a page.
 
-## One phone-width layout at every viewport
+## One layout at every viewport, and it uses the width it is given
 
-The same column at every screen size, centred on anything wider than a phone. Never a second
-layout for desktop.
+The same column at every screen size. Never a second layout for desktop: one thing to build,
+one thing to check, and every person sees what every other person sees. That part does not
+change and is the reason there are no breakpoints here.
 
-One thing to build, one thing to check, and every person sees what every other person sees.
-Anything sized in viewport units breaks that — it is one size on a phone and another inside
-the frame on a desktop — so size in fixed units.
+What did change is the width. The column was held at phone width and framed, so a desktop
+visitor got a narrow slot with the page going on around it. It now grows to a readable line
+length and stops. There is no second design underneath — only a width that runs out.
 
-Check a change by rendering at 390 pixels rather than assuming. Playwright with the
-preinstalled Chromium does it; the horizontal overflow figure should always be zero.
+The phone-width frame belongs to the app, on `app.farahbrunache.com`, where the screens are
+built around one. It was copied here and it was never right here.
+
+Sizing in viewport units is fine now. It was ruled out because a `vw` value meant one size on
+a phone and another inside the frame on a desktop; with no frame it measures the window in
+both places. Bound every one with `clamp()` so it has a floor and a ceiling.
+
+Check a change by rendering rather than assuming, at 390 pixels and again at 1440. Playwright
+with the preinstalled Chromium does it; the horizontal overflow figure should be zero at both.
 
 ## Dark only
 
