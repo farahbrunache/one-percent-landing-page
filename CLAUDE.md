@@ -103,11 +103,20 @@ the title and body set at creation.
 Never watch a pull request. After opening one, do not subscribe to its activity and do not
 wait for its checks. The harness subscribes on its own; unsubscribe straight away.
 
-Auto-merge is on in this repository. Turn it on for the pull request as soon as it is open,
-squash, and it completes itself.
+**Auto-merge goes on every pull request, without exception** (owner decision, 2026-09-29).
+Turn it on as soon as the pull request is open, squash, and it completes itself.
 
-The risk here is not technical. There is no database, no secret and no code that runs for
-anybody — it is a page. What can go wrong is what the page claims, so a change to the price,
-to what somebody gets for it, to what happens after they pay, or to the refund line waits
-for a person to read it. Everything else — wording, spacing, colour, layout, a link, the
-agent instructions — goes in on its own.
+A change to the price, to what somebody gets for it, to what happens after they pay, or to
+the refund line used to wait for a person to read it. That is gone. The owner runs several
+repositories and reading every change by hand across all of them is more work than one
+person has, and a pull request sitting in a queue is not somebody checking it — it is a
+page that says the wrong thing for longer.
+
+The risk here is not technical: there is no database, no secret and no code that runs for
+anybody. What can go wrong is what the page claims. So the care goes into writing the claim
+rather than into waiting afterwards.
+
+Before opening anything that changes a claim, check it against what the product actually
+does — the app's own screens, the method, the agent script — rather than against what the
+page used to say. A page that contradicts the product is the failure this is guarding
+against, and it is found by looking, not by queueing.
