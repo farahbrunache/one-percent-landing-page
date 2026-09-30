@@ -94,6 +94,71 @@
     margin-top: 1.5rem;
   }
 
+  /* The headline asks a question; this is where it gets answered. The arithmetic is the one
+     Skills Economy runs -- fifty thousand people is one percent of the five million it is sized
+     for -- so the two cannot disagree about a figure. */
+  .calc { margin-top: 2rem; }
+  .calc-ask {
+    display: block;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: 0.5rem;
+  }
+  .calc-entry {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    max-width: 14rem;
+  }
+  .calc-sign {
+    font-family: Fraunces, Georgia, serif;
+    font-size: 1.8rem;
+    line-height: 1;
+    color: var(--ink-muted);
+  }
+  /* The spinner arrows a number field draws are three more pixels of chrome on a field holding
+     one number, and they are a different shape in every browser. */
+  .calc input {
+    width: 100%;
+    box-sizing: border-box;
+    font-family: Fraunces, Georgia, serif;
+    font-size: 1.8rem;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    background: var(--paper-sunk);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    padding: 0.35rem 0.6rem;
+    appearance: textfield;
+    -moz-appearance: textfield;
+  }
+  .calc input::-webkit-outer-spin-button,
+  .calc input::-webkit-inner-spin-button { appearance: none; margin: 0; }
+  .calc input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+    border-color: var(--accent);
+  }
+  .calc-out { margin-top: 0.9rem; }
+  .calc-out:empty { margin-top: 0; }
+  .calc-figure {
+    display: block;
+    font-family: Fraunces, Georgia, serif;
+    font-size: clamp(1.6rem, 6vw, 2.4rem);
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent);
+  }
+  .calc-note {
+    display: block;
+    margin-top: 0.4rem;
+    font-size: 0.9rem;
+    color: var(--ink-muted);
+  }
+
   /* The price, stated rather than sold */
   .price {
     margin-top: 2.5rem;
