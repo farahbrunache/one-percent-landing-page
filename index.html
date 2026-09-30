@@ -25,6 +25,16 @@
     behind it.
   </p>
 
+  <div class="calc">
+    <label class="calc-ask" for="rate">One person, once</label>
+    <div class="calc-entry">
+      <span class="calc-sign" aria-hidden="true">$</span>
+      <input id="rate" type="number" inputmode="decimal" min="0" step="any" placeholder="40"
+             autocomplete="off" enterkeyhint="done">
+    </div>
+    <p class="calc-out" id="calcout" role="status"></p>
+  </div>
+
   <div class="price">
     <span class="figure">$7</span>
     <span class="unit">a session. Paid before the call.</span>
@@ -204,5 +214,51 @@
   </footer>
 
 </main>
+<script>
+  // The same arithmetic Skills Economy runs on its own screen: fifty thousand is one percent of
+  // the five million it is sized for, and the figure is that rate across those people.
+  //
+  // It is here because the headline asks a question and the page had no way for anybody to answer
+  // it. A number somebody produces themselves lands; the same number asserted at them does not,
+  // and asserting it took a paragraph this page could not spare.
+  //
+  // Nothing about it is a forecast, and the line under the figure says so every time it appears.
+  // A large number on a page selling to people with nothing has to carry that or it is a promise.
+  (function () {
+    var PEOPLE = 50000;
+    var whole = new Intl.NumberFormat('en-US', {
+      style: 'currency', currency: 'USD', maximumFractionDigits: 0,
+    });
+    var cents = new Intl.NumberFormat('en-US', {
+      style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2,
+    });
+    // A whole number of dollars keeps no cents; anything else keeps both of them, so $7 stays $7
+    // and fifty cents does not print as $0.5.
+    var each = function (n) { return (Number.isInteger(n) ? whole : cents).format(n); };
+    var rate = document.getElementById('rate');
+    var out = document.getElementById('calcout');
+
+    function show() {
+      var n = Number(rate.value);
+      out.textContent = '';
+      if (!Number.isFinite(n) || n <= 0) return;
+
+      var figure = document.createElement('span');
+      figure.className = 'calc-figure';
+      figure.textContent = whole.format(n * PEOPLE) + ' a year';
+
+      var note = document.createElement('span');
+      note.className = 'calc-note';
+      note.textContent = 'Fifty thousand people at ' + each(n)
+        + ' each. Arithmetic, not a forecast, and nobody has reached it.';
+
+      out.append(figure, note);
+    }
+
+    rate.addEventListener('input', show);
+    // A browser restoring the field on back or reload puts a value there without firing anything.
+    show();
+  }());
+</script>
 </body>
 </html>
