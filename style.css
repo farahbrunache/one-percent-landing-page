@@ -94,9 +94,14 @@
     margin-top: 1.5rem;
   }
 
-  /* The headline asks a question; this is where it gets answered. The arithmetic is the one
-     Skills Economy runs -- fifty thousand people is one percent of the five million it is sized
-     for -- so the two cannot disagree about a figure. */
+  /* The headline asks a question; this is where it gets answered, and it sits directly under the
+     headline for that reason. It used to come after the paragraph explaining what the arithmetic
+     does, which explained a number to somebody who had not produced one yet -- and the paragraph
+     says "the number you just produced", which was not true until they had. Question, answer,
+     then what the answer means.
+
+     The arithmetic is the one Skills Economy runs -- fifty thousand people is one percent of the
+     five million it is sized for -- so the two cannot disagree about a figure. */
   .calc { margin-top: 2rem; }
   .calc-ask {
     display: block;
